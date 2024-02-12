@@ -28,7 +28,7 @@ import zmq
 
 
 event = Event()
-base_url = "ws://192.168.0.104:2323/ws"
+base_url = "ws://localhost:2323/ws"  # Changed the connection to localhost.
 
 
 class RobotWebsocketConnection(Node):
@@ -42,10 +42,6 @@ class RobotWebsocketConnection(Node):
         self.process_run_statuses = {
             "webtty": False
         }
-
-        # self.process_start_functions = {
-        #     "webtty": self.webtty_start()
-        # }
 
         self.machine_id = None
         self.process = "webtty_v1.1"  # Webtty Process Name
@@ -151,8 +147,8 @@ class RobotWebsocketConnection(Node):
     def webtty_start(self):
         try:
             webtty_process = Popen(
-                self.process.split(), shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            self.webtty_process_id = webtty_process.pid
+                self.process.split(), stdout=PIPE, stderr=PIPE)  # This Process is running in the Background
+            self.webtty_process = webtty_process.pid  # Keep Track of the Webtty Process
             self.get_logger().info("Started the WebTTY Process")
             self.process_run_statuses["webtty"] = True
 
@@ -161,10 +157,14 @@ class RobotWebsocketConnection(Node):
 
     def webtty_stop(self):
         try:
-            os.kill(self.webtty_process_id, signal.SIGTERM)
-            self.get_logger().info("Stopped the WebTTY Process")
-            self.process_run_statuses["webtty"] = False
-            self.client_token = None  # Stopping from the Reconnection
+            if self.webtty_process:  # Check if process exist or not
+                os.kill(self.webtty_process, signal.SIGKILL)
+                self.get_logger().info("Stopped the WebTTY Process")
+                self.process_run_statuses["webtty"] = False
+                self.client_token = None  # Stopping from the Reconnection
+                self.webtty_process = None  # Reset the process ID after killing
+            else:
+                self.get_logger().warning("No WebTTY process running.")
 
         except Exception as e:
             self.get_logger().error(str(e))
