@@ -157,7 +157,7 @@ class RobotWebsocketConnection(Node):
 
     def webtty_stop(self):
         try:
-            if self.webtty_process:  # Check if process exist or not
+            if self.webtty_process:  # Check if Process exist or not
                 os.kill(self.webtty_process, signal.SIGKILL)
                 self.get_logger().info("Stopped the WebTTY Process")
                 self.process_run_statuses["webtty"] = False
